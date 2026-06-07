@@ -1,0 +1,34 @@
+# Quartus generated output
+output_files/
+db/
+incremental_db/
+qdb/
+.qsys_edit/
+greybox_tmp/
+hps_isw_handoff/
+*.qws
+*.rpt
+*.summary
+*.smsg
+*.pin
+*.sof
+*.pof
+*.jdi
+*.done
+*.jic
+*.qdf
+*.bak
+*.orig
+
+# ModelSim / simulation
+simulation/
+transcript
+*.wlf
+vsim.wlf
+work/
+modelsim.ini
+*.vstf
+*.do.bak
+
+# OS noise
+.DS_Store
