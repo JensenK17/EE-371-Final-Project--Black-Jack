@@ -104,14 +104,20 @@ module blackjack_top (
 
     // LabsLand presents the frame vertically mirrored, so pre-flip the Y
     // coordinate used for drawing (dealer ends up on top, text upright).
-    // Sync / blanking still use the true scan position (px, py).
-    logic [9:0] ry;
-    assign ry = 10'd479 - py;
+    // These are REGISTERED so the subtractor stays out of the renderer's
+    // (already deep) combinational path; sync/blanking use the true scan.
+    logic [9:0] rx, ry;
+    always_ff @(posedge clk) begin
+        if (clk25) begin
+            rx <= px;
+            ry <= 10'd479 - py;
+        end
+    end
 
     // combinational color from the renderer
     logic [7:0] r_c, g_c, b_c;
     vga_renderer #(.MAX_CARDS(MAX_CARDS)) u_vga (
-        .x(px), .y(ry), .active(vga_active),
+        .x(rx), .y(ry), .active(vga_active),
         .cards_a(cards_a), .cards_b(cards_b), .cards_d(cards_d),
         .count_a(count_a), .count_b(count_b), .count_d(count_d),
         .total_a(total_a), .total_b(total_b), .total_d(total_d),
