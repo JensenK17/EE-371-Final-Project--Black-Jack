@@ -102,6 +102,8 @@ module blackjack_top (
         .clk50(clk), .clk25(clk25), .x(px), .y(py),
         .active(vga_active), .hsync(vga_hs), .vsync(vga_vs));
 
+    // combinational color from the renderer
+    logic [7:0] r_c, g_c, b_c;
     vga_renderer #(.MAX_CARDS(MAX_CARDS)) u_vga (
         .x(px), .y(py), .active(vga_active),
         .cards_a(cards_a), .cards_b(cards_b), .cards_d(cards_d),
@@ -110,11 +112,26 @@ module blackjack_top (
         .reveal_hole(reveal_hole), .split_active(split_active),
         .active_hand(active_hand), .round_over(round_over),
         .result_a(result_a), .result_b(result_b),
-        .VGA_R(VGA_R), .VGA_G(VGA_G), .VGA_B(VGA_B));
+        .VGA_R(r_c), .VGA_G(g_c), .VGA_B(b_c));
 
-    assign VGA_HS      = vga_hs;
-    assign VGA_VS      = vga_vs;
-    assign VGA_CLK     = ~clk25;        // data set on rising clk25, latched here
-    assign VGA_BLANK_N = vga_active;
+    // Register the pixel + sync one pixel-clock period (enable = clk25 high).
+    // This gives the (combinational) renderer a full pixel period to settle
+    // and presents the ADV7123 a clean, glitch-free registered signal.
+    logic [7:0] vr, vg, vb;
+    logic       vhs, vvs, vbl;
+    always_ff @(posedge clk) begin
+        if (clk25) begin
+            vr  <= r_c;  vg <= g_c;  vb <= b_c;
+            vhs <= vga_hs; vvs <= vga_vs; vbl <= vga_active;
+        end
+    end
+
+    assign VGA_R       = vr;
+    assign VGA_G       = vg;
+    assign VGA_B       = vb;
+    assign VGA_HS      = vhs;
+    assign VGA_VS      = vvs;
+    assign VGA_BLANK_N = vbl;
+    assign VGA_CLK     = clk25;         // registered pixel clock; DAC latches on its rising edge
     assign VGA_SYNC_N  = 1'b0;          // sync-on-green unused
 endmodule
