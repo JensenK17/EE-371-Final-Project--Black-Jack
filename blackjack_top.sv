@@ -40,14 +40,13 @@ module blackjack_top (
         .clk(clk), .KEY(KEY), .sw9(SW[9]),
         .hit(hit), .stand(stand), .double(double), .split(split), .rst(rst));
 
-    //----- power-on reset -------------------------------------------------
-    // Emit one reset pulse a few cycles after configuration so the first hand
-    // deals automatically, without the player having to toggle SW9 first.
-    logic [3:0] por_cnt = 4'd0;
-    logic       por, sys_rst;
-    always_ff @(posedge clk) if (por_cnt != 4'hF) por_cnt <= por_cnt + 4'd1;
-    assign por     = (por_cnt == 4'hE);    // single-cycle power-on pulse
-    assign sys_rst = rst | por;            // SW9 reset OR power-on reset
+    // The first hand is started by the player's first SW9 press (not auto-
+    // dealt): an FPGA has no entropy at a fixed moment after power-up, so an
+    // auto-dealt hand would be identical every time. Sampling the free-running
+    // shuffle LFSR at the unpredictable moment of a button press is what makes
+    // the deck -- including the first, charged hand -- actually random.
+    logic sys_rst;
+    assign sys_rst = rst;
 
     //----- deck / shuffle FIFO --------------------------------------------
     logic       take_card, split_en;

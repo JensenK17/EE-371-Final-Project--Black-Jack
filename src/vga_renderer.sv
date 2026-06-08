@@ -219,11 +219,13 @@ module vga_renderer #(
         return {hit, digit, col};
     endfunction
 
+    // Totals only show once a hand has cards, so the idle table stays clean
+    // (no stray "0") before the first deal.
     logic [7:0] fd, fp, fa, fb;
-    assign fd = field(x, y, 540, 70,  reveal_hole,            total_d);
-    assign fp = field(x, y, 540, 406, ~split_active,          total_a);
-    assign fa = field(x, y, 120, 406, split_active,           total_a);
-    assign fb = field(x, y, 470, 406, split_active,           total_b);
+    assign fd = field(x, y, 540, 70,  reveal_hole   && (count_d != 0), total_d);
+    assign fp = field(x, y, 540, 406, ~split_active && (count_a != 0), total_a);
+    assign fa = field(x, y, 120, 406, split_active  && (count_a != 0), total_a);
+    assign fb = field(x, y, 470, 406, split_active  && (count_b != 0), total_b);
 
     always_comb begin
         int ry;
