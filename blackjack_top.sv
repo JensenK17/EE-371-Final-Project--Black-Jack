@@ -102,15 +102,15 @@ module blackjack_top (
         .clk50(clk), .clk25(clk25), .x(px), .y(py),
         .active(vga_active), .hsync(vga_hs), .vsync(vga_vs));
 
-    // LabsLand presents the frame vertically mirrored, so pre-flip the Y
-    // coordinate used for drawing (dealer ends up on top, text upright).
-    // These are REGISTERED so the subtractor stays out of the renderer's
-    // (already deep) combinational path; sync/blanking use the true scan.
+    // LabsLand presents the frame horizontally mirrored, so pre-flip the X
+    // coordinate used for drawing. Registered so the subtractor stays out of
+    // the renderer's (already deep) combinational path; sync/blanking use the
+    // true scan position.
     logic [9:0] rx, ry;
     always_ff @(posedge clk) begin
         if (clk25) begin
-            rx <= px;
-            ry <= 10'd479 - py;
+            rx <= 10'd639 - px;
+            ry <= py;
         end
     end
 
