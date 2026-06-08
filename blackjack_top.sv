@@ -102,10 +102,16 @@ module blackjack_top (
         .clk50(clk), .clk25(clk25), .x(px), .y(py),
         .active(vga_active), .hsync(vga_hs), .vsync(vga_vs));
 
+    // LabsLand presents the frame vertically mirrored, so pre-flip the Y
+    // coordinate used for drawing (dealer ends up on top, text upright).
+    // Sync / blanking still use the true scan position (px, py).
+    logic [9:0] ry;
+    assign ry = 10'd479 - py;
+
     // combinational color from the renderer
     logic [7:0] r_c, g_c, b_c;
     vga_renderer #(.MAX_CARDS(MAX_CARDS)) u_vga (
-        .x(px), .y(py), .active(vga_active),
+        .x(px), .y(ry), .active(vga_active),
         .cards_a(cards_a), .cards_b(cards_b), .cards_d(cards_d),
         .count_a(count_a), .count_b(count_b), .count_d(count_d),
         .total_a(total_a), .total_b(total_b), .total_d(total_d),
