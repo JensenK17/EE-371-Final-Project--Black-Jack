@@ -30,16 +30,17 @@ module balance_tracker (
     localparam logic [1:0] R_LOSE = 2'd2;
     localparam logic [1:0] R_PUSH = 2'd3;
 
-    initial balance = 8'd5;
+    logic [7:0] bal = 8'd5;
+    assign balance = bal;
 
     logic signed [9:0] next;
-    always_comb next = $signed({2'b00, balance}) + $signed({{2{bal_delta[7]}}, bal_delta});
+    always_comb next = $signed({2'b00, bal}) + $signed({{2{bal_delta[7]}}, bal_delta});
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            if (balance == 8'd0) balance <= 8'd5;
+            if (bal == 8'd0) bal <= 8'd5;
         end else if (bal_strobe) begin
-            balance <= (next < 0) ? 8'd0 : next[7:0];
+            bal <= (next < 0) ? 8'd0 : next[7:0];
         end
     end
 

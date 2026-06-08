@@ -9,7 +9,7 @@
 //   load_target: 0 = player A, 1 = player B, 2 = dealer
 //==========================================================================
 module hand_registers #(
-    parameter int MAX_CARDS = 11
+    parameter MAX_CARDS = 11
 ) (
     input  logic       clk,
     input  logic       rst,          // new round: clear all hands
@@ -38,11 +38,6 @@ module hand_registers #(
     localparam logic [1:0] HAND_A = 2'd0;
     localparam logic [1:0] HAND_B = 2'd1;
     localparam logic [1:0] HAND_D = 2'd2;
-
-    initial begin
-        cards_a = '0; cards_b = '0; cards_d = '0;
-        count_a = '0; count_b = '0; count_d = '0;
-    end
 
     always_ff @(posedge clk) begin
         if (rst) begin

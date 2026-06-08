@@ -11,7 +11,7 @@ module deck_memory (
 
     initial begin
         for (int i = 0; i < 52; i++)
-            mem[i] = 4'((i % 13) + 1);
+            mem[i] = (i % 13) + 1;
     end
 
     assign card_val = mem[addr];

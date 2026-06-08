@@ -45,12 +45,6 @@ module shuffle_fifo (
     assign empty        = (rd_ptr >= fill);
     assign shuffle_done = (state == SH_READY);
 
-    initial begin
-        fill   = '0;
-        rd_ptr = '0;
-        used   = '0;
-    end
-
     always_ff @(posedge clk) begin
         if (rst) begin
             state  <= SH_RUN;

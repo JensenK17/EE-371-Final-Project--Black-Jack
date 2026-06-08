@@ -5,8 +5,8 @@
 // long the board has been running -> a different deck order each round.
 //==========================================================================
 module lfsr #(
-    parameter int          WIDTH = 16,
-    parameter logic [15:0] SEED  = 16'hACE1
+    parameter          WIDTH = 16,
+    parameter [15:0]   SEED  = 16'hACE1
 ) (
     input  logic             clk,
     input  logic             en,

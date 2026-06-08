@@ -12,7 +12,7 @@
 //==========================================================================
 `timescale 1ns/1ps
 module tb_game;
-    localparam int MC = 11;
+    localparam MC = 11;
 
     logic clk = 0, rst = 0;
     logic hit = 0, stand = 0, dbl = 0, split = 0;
@@ -98,7 +98,7 @@ module tb_game;
     endtask
 
     task automatic check_bal(input string name, input int exp);
-        if (balance !== 8'(exp)) begin
+        if (balance !== exp) begin
             $error("[FAIL] %-26s balance=%0d (exp %0d)", name, balance, exp);
             errors++;
         end else begin

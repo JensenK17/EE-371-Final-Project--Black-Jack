@@ -4,7 +4,7 @@
 //==========================================================================
 `timescale 1ns/1ps
 module tb_hand_total;
-    localparam int MC = 11;
+    localparam MC = 11;
 
     logic [MC*4-1:0] cards;
     logic [3:0]      count;
@@ -20,18 +20,18 @@ module tb_hand_total;
     task automatic seth(input int n, input int c0, input int c1, input int c2,
                         input int c3, input int c4);
         cards = '0;
-        cards[3:0]   = 4'(c0);
-        cards[7:4]   = 4'(c1);
-        cards[11:8]  = 4'(c2);
-        cards[15:12] = 4'(c3);
-        cards[19:16] = 4'(c4);
-        count = 4'(n);
+        cards[3:0]   = c0;
+        cards[7:4]   = c1;
+        cards[11:8]  = c2;
+        cards[15:12] = c3;
+        cards[19:16] = c4;
+        count = n;
         #1;
     endtask
 
     task automatic chk(input string name, input int exp_total,
                        input bit exp_bust);
-        if (total !== 8'(exp_total) || bust !== exp_bust) begin
+        if (total !== exp_total || bust !== exp_bust) begin
             $error("[FAIL] %-22s total=%0d bust=%0b (exp %0d/%0b)",
                    name, total, bust, exp_total, exp_bust);
             errors++;
