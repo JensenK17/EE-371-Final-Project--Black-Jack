@@ -40,13 +40,22 @@ module blackjack_top (
         .clk(clk), .KEY(KEY), .sw9(SW[9]),
         .hit(hit), .stand(stand), .double(double), .split(split), .rst(rst));
 
+    //----- power-on reset -------------------------------------------------
+    // Emit one reset pulse a few cycles after configuration so the first hand
+    // deals automatically, without the player having to toggle SW9 first.
+    logic [3:0] por_cnt = 4'd0;
+    logic       por, sys_rst;
+    always_ff @(posedge clk) if (por_cnt != 4'hF) por_cnt <= por_cnt + 4'd1;
+    assign por     = (por_cnt == 4'hE);    // single-cycle power-on pulse
+    assign sys_rst = rst | por;            // SW9 reset OR power-on reset
+
     //----- deck / shuffle FIFO --------------------------------------------
     logic       take_card, split_en;
     logic [1:0] load_target;
     logic [3:0] next_card;
     logic       shuffle_done, fifo_empty;
     shuffle_fifo u_deck (
-        .clk(clk), .rst(rst), .draw_req(take_card),
+        .clk(clk), .rst(sys_rst), .draw_req(take_card),
         .next_card(next_card), .shuffle_done(shuffle_done), .empty(fifo_empty));
 
     //----- hand registers + totals ----------------------------------------
@@ -56,7 +65,7 @@ module blackjack_top (
     logic                   bust_a, bust_b, bust_d, bj_a, bj_b, bj_d;
     logic                   pair_match;
     hand_registers #(.MAX_CARDS(MAX_CARDS)) u_hands (
-        .clk(clk), .rst(rst),
+        .clk(clk), .rst(sys_rst),
         .load_en(take_card), .load_target(load_target), .load_val(next_card),
         .split_en(split_en),
         .cards_a(cards_a), .cards_b(cards_b), .cards_d(cards_d),
@@ -75,7 +84,7 @@ module blackjack_top (
     logic       reveal_hole, split_active, active_hand, round_over;
     logic [1:0] result_a, result_b;
     game_controller u_fsm (
-        .clk(clk), .rst(rst),
+        .clk(clk), .rst(sys_rst),
         .hit(hit), .stand(stand), .double(double), .split(split),
         .shuffle_done(shuffle_done),
         .total_a(total_a), .total_b(total_b), .total_d(total_d),
@@ -88,7 +97,7 @@ module blackjack_top (
         .result_a(result_a), .result_b(result_b));
 
     balance_tracker u_bal (
-        .clk(clk), .rst(rst),
+        .clk(clk), .rst(sys_rst),
         .bal_strobe(bal_strobe), .bal_delta(bal_delta),
         .round_over(round_over), .result_a(result_a), .result_b(result_b),
         .balance(balance),

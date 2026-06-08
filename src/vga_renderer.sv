@@ -164,11 +164,13 @@ module vga_renderer #(
                     cg_col = 3'((gx) >> 1);
                 end
             end else begin
+                // Two-char rank ("10"): reversed positions for the flipped
+                // display so it reads c0-then-c1 (e.g. "10" not "01").
                 if (lx >= 7'd7 && lx < 7'd23) begin
-                    cg_region = 1'b1; gx = int'(lx) - 7;  cg_code = rc_c0;
+                    cg_region = 1'b1; gx = int'(lx) - 7;  cg_code = rc_c1;
                     cg_col = 3'((gx) >> 1);
                 end else if (lx >= 7'd23 && lx < 7'd39) begin
-                    cg_region = 1'b1; gx = int'(lx) - 23; cg_code = rc_c1;
+                    cg_region = 1'b1; gx = int'(lx) - 23; cg_code = rc_c0;
                     cg_col = 3'((gx) >> 1);
                 end
             end
@@ -202,12 +204,15 @@ module vga_renderer #(
         ry = int'(py) - py0;
         if (en && ry >= 0 && ry < 16 && rx >= 0 && rx < 32) begin
             hit = 1'b1;
+            // Display is horizontally flipped, so render the digits in reversed
+            // position (ones on the low half, tens on the high half) -- after
+            // the flip they read tens-then-ones, e.g. "21" not "12".
             if (rx < 16) begin
                 gx    = rx;
-                digit = (tens == 4'd0) ? 4'd15 : tens;
+                digit = ones;
             end else begin
                 gx    = rx - 16;
-                digit = ones;
+                digit = (tens == 4'd0) ? 4'd15 : tens;
             end
             col = 3'(gx >> 1);
         end

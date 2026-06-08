@@ -30,12 +30,14 @@ module shuffle_fifo (
 
     // ---- storage ----
     logic [3:0]  fifo [0:51];
-    logic [51:0] used;
-    logic [6:0]  fill;     // entries written, 0..52
-    logic [6:0]  rd_ptr;   // entries drawn,   0..52
+    logic [51:0] used   = '0;
+    logic [6:0]  fill   = '0;   // entries written, 0..52
+    logic [6:0]  rd_ptr = '0;   // entries drawn,   0..52
 
+    // Power up in SH_RUN so the deck is actually shuffled before it can read
+    // SH_READY (otherwise a fresh FPGA would report "ready" with an empty deck).
     typedef enum logic {SH_RUN, SH_READY} state_t;
-    state_t state = SH_READY;
+    state_t state = SH_RUN;
 
     logic [5:0] cand;
     assign cand      = rnd[5:0];
