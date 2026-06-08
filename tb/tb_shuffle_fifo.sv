@@ -16,7 +16,12 @@ module tb_shuffle_fifo;
         .clk(clk), .rst(rst), .draw_req(draw),
         .next_card(next_card), .shuffle_done(shuffle_done), .empty(empty));
 
+    string seq;
+
     initial begin
+        $display("============================================================");
+        $display(" TB_SHUFFLE_FIFO : deck shuffle + draw coverage");
+        $display("============================================================");
         for (int r = 1; r <= 13; r++) hist[r] = 0;
 
         // let the LFSR spin a while, then shuffle
@@ -27,8 +32,10 @@ module tb_shuffle_fifo;
         // wait for the shuffle to complete
         wait (shuffle_done);
         @(posedge clk);
+        $display("[PASS] shuffle_done asserted");
 
         // draw all 52
+        seq = "";
         for (int i = 0; i < 52; i++) begin
             if (empty) begin $error("FIFO empty at draw %0d", i); errors++; end
             if (next_card < 1 || next_card > 13) begin
@@ -36,19 +43,27 @@ module tb_shuffle_fifo;
             end else begin
                 hist[next_card]++;
             end
+            seq = {seq, $sformatf("%0d ", next_card)};
             @(negedge clk) draw = 1;
             @(negedge clk) draw = 0;
         end
+        $display("       drawn order: %s", seq);
 
         for (int r = 1; r <= 13; r++) begin
             if (hist[r] != 4) begin
-                $error("rank %0d appeared %0d times (exp 4)", r, hist[r]);
+                $error("[FAIL] rank %0d appeared %0d times (exp 4)", r, hist[r]);
                 errors++;
+            end else begin
+                $display("[PASS] rank %2d appears 4 times", r);
             end
         end
 
-        if (errors == 0) $display("\nTB_SHUFFLE_FIFO: ALL PASS (52 unique, 4x each)");
-        else             $display("\nTB_SHUFFLE_FIFO: %0d FAILURES", errors);
+        $display("------------------------------------------------------------");
+        if (errors == 0)
+            $display(" TB_SHUFFLE_FIFO: ALL PASS (52 cards, 4x each rank)");
+        else
+            $display(" TB_SHUFFLE_FIFO: %0d FAILURE(S)", errors);
+        $display("============================================================");
         $finish;
     end
 

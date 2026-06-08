@@ -32,17 +32,29 @@ module tb_hand_total;
     task automatic chk(input string name, input int exp_total,
                        input bit exp_bust);
         if (total !== 8'(exp_total) || bust !== exp_bust) begin
-            $error("%-22s total=%0d bust=%0b (exp %0d/%0b)",
+            $error("[FAIL] %-22s total=%0d bust=%0b (exp %0d/%0b)",
                    name, total, bust, exp_total, exp_bust);
             errors++;
         end else begin
-            $display("  ok  %-22s total=%0d bust=%0b", name, total, bust);
+            $display("[PASS] %-22s total=%2d bust=%0b", name, total, bust);
+        end
+    endtask
+
+    task automatic chk_bj(input string name, input bit exp_bj);
+        if (bj !== exp_bj) begin
+            $error("[FAIL] %-22s blackjack=%0b (exp %0b)", name, bj, exp_bj);
+            errors++;
+        end else begin
+            $display("[PASS] %-22s blackjack=%0b", name, bj);
         end
     endtask
 
     initial begin
+        $display("============================================================");
+        $display(" TB_HAND_TOTAL : ace 1/11 rule + face-cards-as-10");
+        $display("============================================================");
         seth(2, 1, 13, 0, 0, 0);  chk("A+K (blackjack)",   21, 0);
-        if (bj !== 1'b1) begin $error("A+K should be blackjack"); errors++; end
+        chk_bj("A+K is blackjack", 1);
         seth(2, 1, 1, 0, 0, 0);   chk("A+A",               12, 0);
         seth(3, 1, 1, 9, 0, 0);   chk("A+A+9",             21, 0);
         seth(3, 1, 1, 10, 0, 0);  chk("A+A+10",            12, 0);
@@ -53,8 +65,10 @@ module tb_hand_total;
         seth(2, 1, 9, 0, 0, 0);   chk("A+9 (soft 20)",     20, 0);
         seth(3, 1, 9, 5, 0, 0);   chk("A+9+5",             15, 0);
 
-        if (errors == 0) $display("\nTB_HAND_TOTAL: ALL PASS");
-        else             $display("\nTB_HAND_TOTAL: %0d FAILURES", errors);
+        $display("------------------------------------------------------------");
+        if (errors == 0) $display(" TB_HAND_TOTAL: ALL PASS");
+        else             $display(" TB_HAND_TOTAL: %0d FAILURE(S)", errors);
+        $display("============================================================");
         $finish;
     end
 endmodule

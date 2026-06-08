@@ -99,17 +99,30 @@ module tb_game;
 
     task automatic check_bal(input string name, input int exp);
         if (balance !== 8'(exp)) begin
-            $error("%-26s balance=%0d (exp %0d)", name, balance, exp);
+            $error("[FAIL] %-26s balance=%0d (exp %0d)", name, balance, exp);
             errors++;
         end else begin
-            $display("  ok  %-26s balance=%0d", name, balance);
+            $display("[PASS] %-26s balance=%0d", name, balance);
+        end
+    endtask
+
+    task automatic check_flag(input string name, input logic got, input logic exp);
+        if (got !== exp) begin
+            $error("[FAIL] %-26s = %0b (exp %0b)", name, got, exp);
+            errors++;
+        end else begin
+            $display("[PASS] %-26s = %0b", name, got);
         end
     endtask
 
     initial begin
+        $display("============================================================");
+        $display(" TB_GAME : FSM scenarios (scripted deck), balance checked");
+        $display("============================================================");
         clear_deck();
 
         // --- S1: stand, player 20 vs dealer 17 -> win. 5 -1 +2 = 6 ---
+        $display("\n-- S1: stand, player 20 vs dealer 17 -> player wins --");
         deck[0]=10; deck[1]=10; deck[2]=10; deck[3]=7;
         newround();
         tap_stand();
@@ -117,6 +130,7 @@ module tb_game;
         check_bal("S1 stand win", 6);
 
         // --- S2: player 17, hit 10 -> bust. 6 -1 = 5 ---
+        $display("\n-- S2: player 17, hits to 27 -> bust --");
         clear_deck();
         deck[0]=10; deck[1]=9; deck[2]=7; deck[3]=9; deck[4]=10;
         newround();
@@ -125,6 +139,7 @@ module tb_game;
         check_bal("S2 player bust", 5);
 
         // --- S3: 5+6=11, double -> 21 vs dealer 18 -> win. 5 -1 -1 +4 = 7 ---
+        $display("\n-- S3: 11, double to 21 vs dealer 18 -> win (2x bet) --");
         clear_deck();
         deck[0]=5; deck[1]=10; deck[2]=6; deck[3]=8; deck[4]=10;
         newround();
@@ -133,30 +148,35 @@ module tb_game;
         check_bal("S3 double win", 7);
 
         // --- S4: split 8,8; both 13; dealer busts (12->22). 7 -1 -1 +2 +2 = 9 ---
+        $display("\n-- S4: split 8/8, both 13, dealer busts -> both win --");
         clear_deck();
         deck[0]=8; deck[1]=6; deck[2]=8; deck[3]=6; deck[4]=5; deck[5]=5; deck[6]=10;
         newround();
         tap_split();
+        check_flag("S4 split_active during play", split_active, 1'b1);
         tap_stand();                       // hand A
         while (!active_hand) @(posedge clk); // wait for hand B
         tap_stand();                       // hand B
         finish();
         check_bal("S4 split both win", 9);
-        if (split_active !== 1'b1) begin $error("S4 split_active should be 1"); errors++; end
+        check_flag("S4 split_active", split_active, 1'b1);
 
         // --- S5: split pressed on non-pair (10,7) -> ignored; stand; win.
         //         9 -1 +2 = 10, and split_active must stay 0 ---
+        $display("\n-- S5: split on non-pair 10/7 -> rejected; stand; win --");
         clear_deck();
         deck[0]=10; deck[1]=9; deck[2]=7; deck[3]=7; deck[4]=10;
         newround();
         tap_split();                       // illegal: not a pair -> ignored
-        if (split_active !== 1'b0) begin $error("S5 split should be rejected"); errors++; end
+        check_flag("S5 non-pair split rejected", split_active, 1'b0);
         tap_stand();
         finish();
         check_bal("S5 non-pair split reject", 10);
 
-        if (errors == 0) $display("\nTB_GAME: ALL PASS");
-        else             $display("\nTB_GAME: %0d FAILURES", errors);
+        $display("------------------------------------------------------------");
+        if (errors == 0) $display(" TB_GAME: ALL PASS (5 scenarios)");
+        else             $display(" TB_GAME: %0d FAILURE(S)", errors);
+        $display("============================================================");
         $finish;
     end
 
