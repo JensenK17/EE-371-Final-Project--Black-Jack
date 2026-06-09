@@ -40,13 +40,20 @@ module blackjack_top (
         .clk(clk), .KEY(KEY), .sw9(SW[9]),
         .hit(hit), .stand(stand), .double(double), .split(split), .rst(rst));
 
-    // The first hand is started by the player's first SW9 press (not auto-
-    // dealt): an FPGA has no entropy at a fixed moment after power-up, so an
-    // auto-dealt hand would be identical every time. Sampling the free-running
-    // shuffle LFSR at the unpredictable moment of a button press is what makes
-    // the deck -- including the first, charged hand -- actually random.
+    // The first hand starts on the player's first SW9 press; nothing is dealt
+    // or charged at power-up.
+    //
+    // Startup mask: for the first ~20 ms after configuration, ignore the reset
+    // pulse. This swallows the spurious 0->1 edge the SW9 debouncer produces if
+    // the switch happens to power up in the "on" position, which would
+    // otherwise auto-deal and charge a phantom hand nobody asked for.
+    logic [20:0] startup_cnt = '0;
+    logic        ready;
+    always_ff @(posedge clk) if (!ready) startup_cnt <= startup_cnt + 1'b1;
+    assign ready = startup_cnt[20];     // high ~21 ms after power-up
+
     logic sys_rst;
-    assign sys_rst = rst;
+    assign sys_rst = rst & ready;       // only a real, post-startup SW9 press
 
     //----- deck / shuffle FIFO --------------------------------------------
     logic       take_card, split_en;
